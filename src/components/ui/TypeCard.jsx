@@ -1,6 +1,7 @@
 import { T } from '../../constants/tokens'
 
 export default function TypeCard({ active, onClick, title, subtitle }) {
+  const match = title.match(/^(.*?)(\s*\([^)]*\))$/)
   return (
     <div
       onClick={onClick}
@@ -9,7 +10,7 @@ export default function TypeCard({ active, onClick, title, subtitle }) {
         border: `1.5px solid ${active ? '#C8551F' : T.border}`,
         background: active ? T.brandTint : T.bgCard,
         borderRadius: 14,
-        padding: '16px 14px',
+        padding: '12px 10px',
         transition: 'all 0.18s',
         textAlign: 'center',
         boxShadow: active
@@ -19,18 +20,22 @@ export default function TypeCard({ active, onClick, title, subtitle }) {
     >
       <div
         style={{
-          fontSize: 13.5,
+          fontSize: 13,
           fontWeight: 600,
           color: active ? T.brand : T.text,
           fontFamily: T.font,
           lineHeight: 1.3,
         }}
       >
-        {title}
+        {match ? (<>
+          <span style={{ display: 'block' }}>{match[1]}</span>
+          <span style={{ display: 'block' }}>{match[2].trim()}</span>
+        </>) : title}
       </div>
       <div
         style={{
-          fontSize: 11,
+          fontSize: 'clamp(9px, 2.5vw, 11px)',
+          whiteSpace: 'nowrap',
           color: T.textMute,
           marginTop: 4,
           fontFamily: T.font,

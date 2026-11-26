@@ -10,16 +10,16 @@ export default function App() {
   const [type, setType] = useState('rect')
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(28px,6vw,48px) clamp(16px,5vw,20px) 40px' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(16px,3vw,28px) clamp(12px,4vw,20px) 40px' }}>
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+      <div style={{ textAlign: 'center', marginBottom: 16 }}>
         {/* Logo mark */}
-        <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ marginBottom: 5, display: 'flex', justifyContent: 'center' }}>
           <img
             src='images/Design-Your-Desk3-1-300x300.png'
             alt='Build Your Desks'
-            width={48}
-            height={48}
+            width={40}
+            height={40}
             style={{ display: 'block' }}
           />
         </div>
@@ -27,12 +27,12 @@ export default function App() {
         {/* Brand label */}
         <div
           style={{
-            fontSize: 10.5,
+            fontSize: 9.5,
             fontWeight: 600,
             color: T.brand,
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
-            marginBottom: 8,
+            marginBottom: 4,
             fontFamily: T.font,
           }}
         >
@@ -43,12 +43,12 @@ export default function App() {
         <div
           style={{
             fontFamily: T.fontSerif,
-            fontSize: 'clamp(25px,6vw,34px)',
+            fontSize: 'clamp(24px,5vw,30px)',
             fontWeight: 700,
             fontStyle: 'italic',
             color: T.text,
             lineHeight: 1.15,
-            marginBottom: 8,
+            marginBottom: 5,
           }}
         >
           Price Estimator
@@ -56,11 +56,11 @@ export default function App() {
 
         <div
           style={{
-            fontSize: 13,
+            fontSize: 12,
             color: T.textMute,
             maxWidth: 440,
             margin: '0 auto',
-            lineHeight: 1.45,
+            lineHeight: 1.35,
             fontFamily: T.font,
           }}
         >
@@ -72,9 +72,9 @@ export default function App() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))',
+          gridTemplateColumns: 'repeat(2,minmax(0,1fr))',
           gap: 10,
-          marginBottom: 28,
+          marginBottom: 20,
         }}
       >
         <TypeSelector types={TYPES} activeId={type} onSelect={setType} />

@@ -103,12 +103,21 @@ describe('RectCalculator — frame selection', () => {
     })
   })
 
-  it('shows only dual frame when length is 161–180cm', async () => {
+  it('shows Pro only when length is 161–180cm', async () => {
     render(<RectCalculator />)
     fireEvent.change(screen.getByDisplayValue('140'), { target: { value: '165' } })
     await waitFor(() => {
       expect(screen.queryByText('Build Your Desks\u2122 Lite')).not.toBeInTheDocument()
       expect(screen.getByText('Build Your Desks\u2122 Pro')).toBeInTheDocument()
+    })
+  })
+  it('shows Custom Frame only above 180cm', async () => {
+    render(<RectCalculator />)
+    fireEvent.change(screen.getByDisplayValue('140'), { target: { value: '181' } })
+    await waitFor(() => {
+      expect(screen.queryByText('Build Your Desks\u2122 Lite')).not.toBeInTheDocument()
+      expect(screen.queryByText('Build Your Desks\u2122 Pro')).not.toBeInTheDocument()
+      expect(screen.getByText('Build Your Desks™ Custom Frame')).toBeInTheDocument()
     })
   })
 })
