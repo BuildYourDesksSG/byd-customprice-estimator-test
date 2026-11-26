@@ -365,18 +365,15 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: (singleOk && dualOk) || useCustomFrame ? '1fr 1fr' : '1fr',
+              gridTemplateColumns: singleOk && dualOk ? 'repeat(2, minmax(0, 1fr))' : '1fr',
               gap: 12,
             }}
           >
-            {(singleOk || useCustomFrame) && (
+            {singleOk && (
               <div
-                onClick={() => { if (singleOk) setMotor('single') }}
-                title={singleOk ? '' : 'Lite is only available up to 160cm'}
-                aria-disabled={!singleOk}
-                style={{
-                  cursor: singleOk ? 'pointer' : 'not-allowed',
-                  opacity: singleOk ? 1 : 0.5,
+                onClick={() => setMotor('single')}
+                                style={{
+                  cursor: 'pointer',
                   border: `1.5px solid ${motor === 'single' ? '#C8551F' : T.border}`,
                   background: motor === 'single' ? T.brandTint : T.bg,
                   borderRadius: 12,
@@ -394,7 +391,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
                 >
                   {RECT_FRAMES.single.name}
                 </div>
-                <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>{RECT_FRAMES.single.description} · Frame: {fmt(RECT_FRAMES.single.price)}{!singleOk && ' · Up to 160cm only'}</div>
+                <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>{RECT_FRAMES.single.description} · Frame: {fmt(RECT_FRAMES.single.price)}</div>
               </div>
             )}
             {dualOk && !useCustomFrame && (
@@ -422,14 +419,13 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
                 <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>{RECT_FRAMES.dual.description} · Frame: {fmt(RECT_FRAMES.dual.price)}</div>
               </div>
             )}
+            {useCustomFrame && (
+              <div style={{ border: '1.5px solid #C8551F', background: T.brandTint, borderRadius: 12, padding: 14, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>{RECT_CUSTOM_FRAME.name}</div>
+                <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>Frame: {fmt(RECT_CUSTOM_FRAME.price)} · Automatically selected above 180cm</div>
+              </div>
+            )}
           </div>
-
-          {useCustomFrame && (
-            <div style={{ border: '1.5px solid #C8551F', background: T.brandTint, borderRadius: 12, padding: 14 }}>
-              <div style={{ fontWeight: 600, fontSize: 13.5 }}>{RECT_CUSTOM_FRAME.name}</div>
-              <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>Frame: {fmt(RECT_CUSTOM_FRAME.price)} · Automatically selected for lengths above 180cm</div>
-            </div>
-          )}
 
           {/* Frame colour (#20) */}
           <div style={{ marginTop: 16 }}>
