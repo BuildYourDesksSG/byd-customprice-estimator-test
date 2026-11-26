@@ -14,7 +14,7 @@ import {
   SOLID_WOOD_SPECIES,
   L2_ORIENTATIONS,
 } from '../../constants/lshapeDesk'
-import { GROMMET_HOLE_TYPES, grommetAddonPrice, WOOD_EDGE_STYLES } from '../../constants/rectDesk'
+import { grommetAddonPrice, WOOD_EDGE_STYLES } from '../../constants/rectDesk'
 import { ASSEMBLY_STANDARD, ASSEMBLY_TWO_PERSON } from '../../constants/assembly'
 import {
   ACCESSORY_CABLE_TRAY,
@@ -37,7 +37,8 @@ import ColourSwatchGrid from '../ui/ColourSwatchGrid'
 import CheckOption from '../ui/CheckOption'
 import PriceRow from '../ui/PriceRow'
 import InfoNotice from '../ui/InfoNotice'
-import GrommetOptions from '../ui/GrommetOptions'
+import MultiGrommetPicker from '../ui/MultiGrommetPicker'
+import { createGrommets, activeGrommets, grommetCapCost } from '../../utils/grommets'
 import LShapeDiagram from './LShapeDiagram'
 
 export default function LShapeMaterialPanel({ materialKey }) {
@@ -54,11 +55,7 @@ export default function LShapeMaterialPanel({ materialKey }) {
   const [orientation, setOrientation] = useState('Left')
   const [colour, setColour] = useState(colours[0].id)
   const [edgeStyle, setEdgeStyle] = useState(WOOD_EDGE_STYLES[0].id)
-  const [holeType, setHoleType] = useState('None')
-  const [position, setPosition] = useState('Middle')
-  const [grommetSize, setGrommetSize] = useState('20cm')
-  const [grommetColour, setGrommetColour] = useState('Black')
-  const [grommetAddon, setGrommetAddon] = useState(0)
+  const [grommets, setGrommets] = useState(createGrommets)
   const [assembly, setAssembly] = useState(false)
   const [cableTray, setCableTray] = useState(0)
   const [drawer, setDrawer] = useState(0)
@@ -98,10 +95,7 @@ export default function LShapeMaterialPanel({ materialKey }) {
     const overlap = (w2 / 100) * (w1 / 100)
     const area = a1 + a2 - overlap
     const topPrice = area * rate
-    const grommetCost =
-      grommetAddon && holeType !== 'None'
-        ? grommetAddonPrice(holeType, grommetSize, grommetColour) * quantity(grommetAddon)
-        : 0
+    const grommetCost = grommetCapCost(grommets)
     const accCost =
       quantity(cableTray) * ACCESSORY_CABLE_TRAY +
       quantity(drawer) * ACCESSORY_DRAWER +
@@ -119,10 +113,7 @@ export default function LShapeMaterialPanel({ materialKey }) {
     w1,
     w2,
     rate,
-    holeType,
-    grommetSize,
-    grommetColour,
-    grommetAddon,
+    grommets,
     assemblyFee,
     cableTray,
     drawer,
@@ -150,18 +141,7 @@ export default function LShapeMaterialPanel({ materialKey }) {
     speciesOrColourName,
     edgeStyle: isSpecies ? (WOOD_EDGE_STYLES.find((e) => e.id === edgeStyle)?.label ?? null) : null,
     rate,
-    holeType,
-    position,
-    grommet:
-      holeType !== 'None'
-        ? {
-            holeType: holeType.toLowerCase(),
-            size: holeType === 'Rectangular' ? grommetSize : '6cm',
-            addon: grommetAddon,
-            qty: quantity(grommetAddon),
-            colour: grommetAddon ? grommetColour : null,
-          }
-        : null,
+    grommets,
     assembly,
     assemblyFee,
     cableTray,
@@ -217,14 +197,15 @@ export default function LShapeMaterialPanel({ materialKey }) {
             max={LSHAPE_WIDTH_MAX}
           />
         </div>
-        <InfoNotice>
-          Maximum dimensions: {spec.l1max}cm (main side length) × {LSHAPE_WIDTH_MAX}cm (width). Need
-          something larger?{' '}
-          <a href={CONTACT_URL} style={{ color: T.brand, fontWeight: 600 }}>
-            Contact our team
-          </a>
-          .
-        </InfoNotice>
+        {l2 > 120 && (
+          <div role='alert' style={{ color: '#C62828', fontSize: 13, fontWeight: 700, lineHeight: 1.5, marginBottom: 12 }}>
+            Limited color selections ONLY. Speak to our team.
+          </div>
+        )}
+        {l2 <= 120 && <InfoNotice>
+          Maximum dimensions: {spec.l1max}cm (main side length) × {LSHAPE_WIDTH_MAX}cm (width). Need something larger?{' '}
+          <a href={CONTACT_URL} style={{ color: T.brand, fontWeight: 600 }}>Contact our team</a>.
+        </InfoNotice>}
         <div style={{ marginTop: 16 }}>
           <div style={{ fontSize: 12, color: T.textMute, marginBottom: 8, fontWeight: 500 }}>
             L2 Orientation — which side the return side sits on (L1 is your main side)
@@ -322,31 +303,7 @@ export default function LShapeMaterialPanel({ materialKey }) {
       {/* Grommet Hole Cut-out */}
       <Card>
         <SectionLabel>Grommet Hole Cut-out</SectionLabel>
-        <PillSelect
-          options={GROMMET_HOLE_TYPES}
-          value={holeType}
-          onChange={(v) => {
-            setHoleType(v)
-            if (v === 'None') setGrommetAddon(false)
-          }}
-        />
-        {holeType !== 'None' && (
-          <div style={{ marginTop: 16 }}>
-            <GrommetOptions
-              holeType={holeType}
-              size={grommetSize}
-              onSizeChange={setGrommetSize}
-              position={position}
-              onPositionChange={setPosition}
-              addon={grommetAddon}
-              onAddonChange={(v) => setGrommetAddon(v ? Math.max(1, quantity(grommetAddon)) : 0)}
-                  addonQuantity={quantity(grommetAddon)}
-                  onAddonQuantityChange={setGrommetAddon}
-              colour={grommetColour}
-              onColourChange={setGrommetColour}
-            />
-          </div>
-        )}
+        <MultiGrommetPicker grommets={grommets} setGrommets={setGrommets} />
       </Card>
 
       {/* Assembly */}
@@ -489,20 +446,12 @@ export default function LShapeMaterialPanel({ materialKey }) {
             muted
           />
         )}
-        {holeType !== 'None' && (
-          <PriceRow
-            label={`Grommet hole cut-out (${holeType === 'Circle' ? '6cm circle' : `${grommetSize} rect`}, ${position})`}
-            value='Free'
-            muted
-          />
-        )}
-        {quantity(grommetAddon) > 0 && holeType !== 'None' && (
-          <PriceRow
-            label={quantityLabel(`Grommet cap (${grommetColour})`, grommetAddon)}
-            value={fmt(result.grommetCost)}
-            muted
-          />
-        )}
+        {activeGrommets(grommets).map(g => <div key={g.type + g.size}>
+          <PriceRow label={`${g.type} hole cut-out × ${quantity(g.quantity)} (${g.size}, ${g.position})`} value='Free' muted />
+          {quantity(g.capQuantity) > 0 && <PriceRow
+            label={quantityLabel(`${g.type} ${g.size} grommet cap (${g.colour})`, g.capQuantity)}
+            value={fmt(grommetAddonPrice(g.type, g.size, g.colour) * quantity(g.capQuantity))} muted />}
+        </div>)}
         {quantity(cableTray) > 0 && <PriceRow label={quantityLabel('Cable Tray', cableTray)} value={fmt(ACCESSORY_CABLE_TRAY * quantity(cableTray))} muted />}
         {quantity(drawer) > 0 && <PriceRow label={quantityLabel('Slim Drawer', drawer)} value={fmt(ACCESSORY_DRAWER * quantity(drawer))} muted />}
         {quantity(retractSocket) > 0 && (

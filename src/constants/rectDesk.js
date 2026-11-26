@@ -25,7 +25,7 @@ export const RECT_CUSTOM_FRAME = { name: 'Build Your Desks™ Custom Frame', des
 export const FRAME_COLOURS = ['Black', 'White']
 export const FLAT_TIER_PRICE = 349
 export const RECT_MIN_LEN = 90
-export const RECT_DEPTH_MIN = 60
+export const RECT_DEPTH_MIN = 40
 export const RECT_DEPTH_MAX = 80
 
 // 🔴 CHANGE BELOW — FINAL MFC COLOUR LIST (10 colours)

@@ -2,7 +2,7 @@ import { TOP_RATE } from './assembly'
 export const LSHAPE_FRAME_PRICE = 599
 export const LSHAPE_L1_MIN = 120
 export const LSHAPE_L2_MIN = 90
-export const LSHAPE_L2_MAX = 120
+export const LSHAPE_L2_MAX = 180
 export const LSHAPE_WIDTH_MIN = 30
 export const LSHAPE_WIDTH_MAX = 80
 export const LSHAPE_MATERIALS = {
@@ -10,7 +10,7 @@ export const LSHAPE_MATERIALS = {
     label: 'MFC',
     tag: 'Standard',
     l1max: 180,
-    l2max: 120,
+    l2max: 180,
     rateType: 'flat',
     rate: TOP_RATE,
     cableNote: 'Rectangular or square grommet holes only — no concave slot.',
@@ -19,7 +19,7 @@ export const LSHAPE_MATERIALS = {
     label: 'Solid Wood',
     tag: 'Side-Joint Construction',
     l1max: 180,
-    l2max: 120,
+    l2max: 180,
     rateType: 'species',
     cableNote: 'Any cable routing style — concave, grommet, T-slot, or round hole.',
   },

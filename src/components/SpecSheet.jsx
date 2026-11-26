@@ -3,6 +3,7 @@ import { T } from '../constants/tokens'
 import { CONTACT_URL } from '../constants/config'
 import { LSHAPE_FRAME_PRICE } from '../constants/lshapeDesk'
 import { FLAT_TIER_PRICE, grommetAddonPrice } from '../constants/rectDesk'
+import { activeGrommets } from '../utils/grommets'
 import {
   ACCESSORY_CABLE_TRAY,
   ACCESSORY_DRAWER,
@@ -150,10 +151,10 @@ function RectSpec({ spec }) {
         {spec.frameColour && <Row l='Frame Colour' v={spec.frameColour} />}
         <Row l='Colour' v={spec.colourName} />
         {spec.edgeName && <Row l='Edge Style' v={spec.edgeName} />}
-        {spec.grommets && Object.entries(spec.grommets).map(([type, config]) => config.quantity > 0 && (
-          <div key={type}>
-            <Row l={`${type} Holes`} v={`${quantity(config.quantity)} × ${config.size} — ${config.position}`} />
-            {config.capQuantity > 0 && <Row l={`${type} Caps`} v={`${quantity(config.capQuantity)} × ${config.colour}`} />}
+        {spec.grommets && activeGrommets(spec.grommets).map(config => (
+          <div key={config.type + config.size}>
+            <Row l={`${config.type} ${config.size} Holes`} v={`${quantity(config.quantity)} × ${config.size} — ${config.position}`} />
+            {config.capQuantity > 0 && <Row l={`${config.type} ${config.size} Caps`} v={`${quantity(config.capQuantity)} × ${config.colour}`} />}
           </div>
         ))}
       </SectionBlock>
@@ -175,12 +176,12 @@ function RectSpec({ spec }) {
           </>
         )}
         {spec.assembly && <PriceRow label='Assembly' value={fmt(spec.assemblyFee)} muted />}
-        {spec.grommets && Object.entries(spec.grommets).map(([type, config]) => config.quantity > 0 && (
-          <div key={type}>
-            <PriceRow label={`${type} hole cut-out × ${quantity(config.quantity)}`} value='Free' muted />
+        {spec.grommets && activeGrommets(spec.grommets).map(config => (
+          <div key={config.type + config.size}>
+            <PriceRow label={`${config.type} hole cut-out × ${quantity(config.quantity)}`} value='Free' muted />
             {config.capQuantity > 0 && (
-              <PriceRow label={quantityLabel(`${type} grommet cap (${config.colour})`, config.capQuantity)}
-                value={fmt(grommetAddonPrice(type, config.size, config.colour) * quantity(config.capQuantity))} muted />
+              <PriceRow label={quantityLabel(`${config.type} ${config.size} grommet cap (${config.colour})`, config.capQuantity)}
+                value={fmt(grommetAddonPrice(config.type, config.size, config.colour) * quantity(config.capQuantity))} muted />
             )}
           </div>
         ))}
@@ -229,17 +230,9 @@ function LShapeSpec({ spec }) {
         />
         {spec.edgeStyle && <Row l='Edge Style' v={spec.edgeStyle} />}
         <Row l='Rate' v={`$${spec.rate}/m²`} />
-        {spec.holeType && spec.holeType !== 'None' && (
-          <Row
-            l='Grommet Hole'
-            v={
-              spec.holeType === 'Circle'
-                ? `Circle 6cm — ${spec.position}`
-                : `Rectangular ${spec.grommet?.size} — ${spec.position}`
-            }
-          />
-        )}
-        {Boolean(spec.grommet?.addon) && quantity(spec.grommet?.qty ?? 1) > 0 && <Row l={quantityLabel('Grommet Cap Colour', spec.grommet.qty)} v={spec.grommet.colour} />}
+        {activeGrommets(spec.grommets || {}).map(g => <Row key={g.type + g.size}
+          l={`${g.type} hole cut-out × ${quantity(g.quantity)}`}
+          v={`${g.size} — ${g.position}${quantity(g.capQuantity) > 0 ? `; ${quantity(g.capQuantity)} cap(s) (${g.colour})` : ''}`}/>) }
       </SectionBlock>
       <SectionBlock title='Price Breakdown' bg={T.bgAlt}>
         <PriceRow label='Frame (3-Leg L-Shape)' value={fmt(LSHAPE_FRAME_PRICE)} muted />
@@ -265,16 +258,12 @@ function LShapeSpec({ spec }) {
         )}
         <PriceRow label='Delivery' value='Free' muted />
         {spec.assembly && <PriceRow label='Assembly' value={fmt(spec.assemblyFee)} muted />}
-        {spec.holeType && spec.holeType !== 'None' && (
-          <PriceRow label='Grommet hole cut-out' value='Free' muted />
-        )}
-        {Boolean(spec.grommet?.addon) && quantity(spec.grommet?.qty ?? 1) > 0 && (
-          <PriceRow
-            label={quantityLabel(`Grommet cap (${spec.grommet.colour})`, spec.grommet.qty)}
-            value={fmt(spec.grommetCost)}
-            muted
-          />
-        )}
+        {activeGrommets(spec.grommets || {}).map(g => <div key={g.type + g.size}>
+          <PriceRow label={`${g.type} hole cut-out × ${quantity(g.quantity)} (${g.size}, ${g.position})`} value='Free' muted />
+          {quantity(g.capQuantity) > 0 && <PriceRow
+            label={quantityLabel(`${g.type} ${g.size} grommet cap (${g.colour})`, g.capQuantity)}
+            value={fmt(grommetAddonPrice(g.type, g.size, g.colour) * quantity(g.capQuantity))} muted />}
+        </div>)}
         {quantity(spec.cableTray) > 0 && <PriceRow label={quantityLabel('Cable Tray', spec.cableTray)} value={fmt(ACCESSORY_CABLE_TRAY * quantity(spec.cableTray))} muted />}
         {quantity(spec.drawer) > 0 && <PriceRow label={quantityLabel('Slim Drawer', spec.drawer)} value={fmt(ACCESSORY_DRAWER * quantity(spec.drawer))} muted />}
         {quantity(spec.retractSocket) > 0 && (

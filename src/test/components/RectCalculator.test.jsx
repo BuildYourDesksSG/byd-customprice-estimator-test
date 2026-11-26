@@ -111,7 +111,7 @@ describe('RectCalculator — frame selection', () => {
       expect(screen.getByText('Build Your Desks\u2122 Pro')).toBeInTheDocument()
     })
   })
-  it('shows Custom Frame only above 180cm', async () => {
+  it('hides Lite/Pro and automatically uses Custom Frame above 180cm', async () => {
     render(<RectCalculator />)
     fireEvent.change(screen.getByDisplayValue('140'), { target: { value: '181' } })
     await waitFor(() => {

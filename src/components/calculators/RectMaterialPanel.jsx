@@ -36,7 +36,8 @@ import RangeSlider from '../ui/RangeSlider'
 import ColourSwatchGrid from '../ui/ColourSwatchGrid'
 import PillSelect from '../ui/PillSelect'
 import CheckOption from '../ui/CheckOption'
-import GrommetOptions from '../ui/GrommetOptions'
+import MultiGrommetPicker from '../ui/MultiGrommetPicker'
+import { createGrommets, activeGrommets, grommetCapCost } from '../../utils/grommets'
 import PriceRow from '../ui/PriceRow'
 import StopNotice from '../ui/StopNotice'
 import InfoNotice from '../ui/InfoNotice'
@@ -136,13 +137,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
   const [edge, setEdge] = useState(edges[0].id)
   const [assembly, setAssembly] = useState(false)
   // Independently configurable circle and rectangular grommet holes and caps.
-  const [grommets, setGrommets] = useState({
-    Circle: { quantity: 0, size: '6cm', position: 'Centre', colour: 'Black', capQuantity: 0 },
-    Rectangular: { quantity: 0, size: '20cm', position: 'Centre', colour: 'Black', capQuantity: 0 },
-  })
-  const updateGrommet = (type, changes) => setGrommets((previous) => ({
-    ...previous, [type]: { ...previous[type], ...changes },
-  }))
+  const [grommets, setGrommets] = useState(createGrommets)
   const [cableTray, setCableTray] = useState(0)
   const [drawer, setDrawer] = useState(0)
   const [retractSocket, setRetractSocket] = useState(0)
@@ -162,20 +157,23 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
 
   const tooShort = length < RECT_MIN_LEN
   const tooLong = length > RECT_MAX_LEN
-  const useCustomFrame = length > RECT_CUSTOM_THRESHOLD
+  const forceCustomFrame = length > RECT_CUSTOM_THRESHOLD || depth < 60
+  const effectiveMotor = forceCustomFrame ? 'custom' : motor
+  const previouslyForced = useRef(false)
   const depthOk = depth >= RECT_DEPTH_MIN && depth <= RECT_DEPTH_MAX
-  const singleOk = length >= RECT_MIN_LEN && length <= RECT_FRAMES.single.maxLen
-  const dualOk = length >= 100 && length <= RECT_FRAMES.dual.maxLen
+  const singleOk = !forceCustomFrame && length >= RECT_MIN_LEN && length <= RECT_FRAMES.single.maxLen
+  const dualOk = !forceCustomFrame && length >= 100 && length <= RECT_FRAMES.dual.maxLen
 
-  // Auto-selects motor when length moves outside a frame's supported range.
-  // singleOk/dualOk derive only from length — listing them as deps would be redundant.
+  // Preserve manual Custom Frame selection at standard sizes, but force Custom outside
+  // Lite/Pro limits. When moving back into standard sizes, revert to a valid default.
   /* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (length > RECT_CUSTOM_THRESHOLD) setMotor('custom')
-    else if (motor === 'custom') setMotor(length <= RECT_FRAMES.single.maxLen ? 'single' : 'dual')
-    else if (!singleOk && dualOk) setMotor('dual')
-    else if (singleOk && !dualOk) setMotor('single')
-  }, [length])
+    if (forceCustomFrame) setMotor('custom')
+    else if (previouslyForced.current) setMotor(length <= RECT_FRAMES.single.maxLen ? 'single' : 'dual')
+    else if (motor === 'single' && !singleOk && dualOk) setMotor('dual')
+    else if (motor === 'dual' && !dualOk && singleOk) setMotor('single')
+    previouslyForced.current = forceCustomFrame
+  }, [length, depth])
   /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 
   // Trigger print after SpecSheet mounts in the DOM.
@@ -189,10 +187,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
 
   const assemblyFee = assembly ? ASSEMBLY_STANDARD : 0
 
-  const grommetCost = Object.entries(grommets).reduce((total, [type, config]) =>
-    total + (quantity(config.quantity) > 0
-      ? grommetAddonPrice(type, config.size, config.colour) * quantity(config.capQuantity)
-      : 0), 0)
+  const grommetCost = grommetCapCost(grommets)
 
   const accCost =
     quantity(cableTray) * ACCESSORY_CABLE_TRAY +
@@ -209,17 +204,17 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
 
   const result = useMemo(() => {
     if (tooShort || tooLong || !depthOk) return null
-    const frame = useCustomFrame ? RECT_CUSTOM_FRAME : RECT_FRAMES[motor]
+    const frame = effectiveMotor === 'custom' ? RECT_CUSTOM_FRAME : RECT_FRAMES[effectiveMotor]
     if (!frame) return null
     const area = (length / 100) * (depth / 100)
     const topPrice = area * rate
     const total = frame.price + topPrice + assemblyFee + grommetCost + accCost
     return { frame, area, topPrice, total }
-  }, [length, depth, motor, rate, tooShort, tooLong, depthOk, assemblyFee, grommetCost, accCost, useCustomFrame])
+  }, [length, depth, motor, rate, tooShort, tooLong, depthOk, assemblyFee, grommetCost, accCost, effectiveMotor])
 
   const colourName = colours.find((c) => c.id === colour)?.name ?? colour
   const edgeName = edges.find((e) => e.id === edge)?.label ?? edge
-  const motorLabel = (useCustomFrame ? RECT_CUSTOM_FRAME : RECT_FRAMES[motor])?.name ?? motor
+  const motorLabel = (effectiveMotor === 'custom' ? RECT_CUSTOM_FRAME : RECT_FRAMES[effectiveMotor])?.name ?? effectiveMotor
 
   const rectSpec = result
     ? {
@@ -359,20 +354,20 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
       </Card>
 
       {/* Frame */}
-      {!tooShort && !tooLong && depthOk && (singleOk || dualOk || useCustomFrame) && (
+      {!tooShort && !tooLong && depthOk && (
         <Card>
           <SectionLabel>Frame</SectionLabel>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: singleOk && dualOk ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+              gridTemplateColumns: forceCustomFrame ? '1fr' : 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))',
               gap: 12,
             }}
           >
             {singleOk && (
               <div
                 onClick={() => setMotor('single')}
-                                style={{
+                style={{
                   cursor: 'pointer',
                   border: `1.5px solid ${motor === 'single' ? '#C8551F' : T.border}`,
                   background: motor === 'single' ? T.brandTint : T.bg,
@@ -394,7 +389,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
                 <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>{RECT_FRAMES.single.description} · Frame: {fmt(RECT_FRAMES.single.price)}</div>
               </div>
             )}
-            {dualOk && !useCustomFrame && (
+            {dualOk && (
               <div
                 onClick={() => setMotor('dual')}
                 style={{
@@ -419,12 +414,10 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
                 <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>{RECT_FRAMES.dual.description} · Frame: {fmt(RECT_FRAMES.dual.price)}</div>
               </div>
             )}
-            {useCustomFrame && (
-              <div style={{ border: '1.5px solid #C8551F', background: T.brandTint, borderRadius: 12, padding: 14, minWidth: 0 }}>
+            <div onClick={() => setMotor('custom')} style={{ cursor: 'pointer', border: `1.5px solid ${effectiveMotor === 'custom' ? '#C8551F' : T.border}`, background: effectiveMotor === 'custom' ? T.brandTint : T.bg, borderRadius: 12, padding: 14, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 13.5 }}>{RECT_CUSTOM_FRAME.name}</div>
-                <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>Frame: {fmt(RECT_CUSTOM_FRAME.price)} · Automatically selected above 180cm</div>
+                <div style={{ fontSize: 12, color: T.textMute, marginTop: 3 }}>Frame: {fmt(RECT_CUSTOM_FRAME.price)}</div>
               </div>
-            )}
           </div>
 
           {/* Frame colour (#20) */}
@@ -436,7 +429,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
           </div>
 
           {/* Free cup + headphone holder for Lite/Pro (#18) */}
-          {!useCustomFrame && <div style={{ marginTop: 14 }}>
+          {effectiveMotor === 'custom' ? <div style={{ marginTop: 14 }}><InfoNotice>Cup holder and headphone holder are not included with Custom Frame.</InfoNotice></div> : <div style={{ marginTop: 14 }}>
             <InfoNotice>
               Includes a free cup holder and headphone holder (worth $39.90) with every Build Your
               Desks™ Lite and Pro frame.
@@ -461,38 +454,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
 
           <Card>
             <SectionLabel>Grommet Hole Cut-out</SectionLabel>
-            <div style={{ display: 'grid', gap: 18 }}>
-              {['Circle', 'Rectangular'].map((type) => {
-                const config = grommets[type]
-                return (
-                  <div key={type} style={{ border: `1px solid ${T.border}`, borderRadius: 12, padding: 12 }}>
-                    <CheckOption
-                      label={`${type} hole cut-out (Free)`}
-                      price={0}
-                      checked={config.quantity > 0}
-                      onChange={(enabled) => updateGrommet(type, { quantity: enabled ? 1 : 0, capQuantity: enabled ? config.capQuantity : 0 })}
-                      qty={config.quantity}
-                      onQuantityChange={(value) => updateGrommet(type, { quantity: quantity(value), capQuantity: quantity(value) ? config.capQuantity : 0 })}
-                    />
-                    {config.quantity > 0 && <div style={{ marginTop: 12 }}>
-                      <GrommetOptions
-                        holeType={type}
-                        size={config.size}
-                        onSizeChange={(size) => updateGrommet(type, { size })}
-                        position={config.position}
-                        onPositionChange={(position) => updateGrommet(type, { position })}
-                        addon={config.capQuantity > 0}
-                        onAddonChange={(enabled) => updateGrommet(type, { capQuantity: enabled ? 1 : 0 })}
-                        addonQuantity={config.capQuantity}
-                        onAddonQuantityChange={(value) => updateGrommet(type, { capQuantity: quantity(value) })}
-                        colour={config.colour}
-                        onColourChange={(colour) => updateGrommet(type, { colour })}
-                      />
-                    </div>}
-                  </div>
-                )
-              })}
-            </div>
+            <MultiGrommetPicker grommets={grommets} setGrommets={setGrommets} />
           </Card>
 
           <Card>
@@ -626,12 +588,12 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
                 muted
               />
             )}
-            {Object.entries(grommets).map(([type, config]) => config.quantity > 0 && (
-              <div key={type}>
-                <PriceRow label={`${type} hole cut-out × ${quantity(config.quantity)} (${config.size}, ${config.position})`} value='Free' muted />
+            {activeGrommets(grommets).map((config) => (
+              <div key={config.type + config.size}>
+                <PriceRow label={`${config.type} hole cut-out × ${quantity(config.quantity)} (${config.size}, ${config.position})`} value='Free' muted />
                 {config.capQuantity > 0 && (
-                  <PriceRow label={quantityLabel(`${type} grommet cap (${config.colour})`, config.capQuantity)}
-                    value={fmt(grommetAddonPrice(type, config.size, config.colour) * quantity(config.capQuantity))} muted />
+                  <PriceRow label={quantityLabel(`${config.type} ${config.size} grommet cap (${config.colour})`, config.capQuantity)}
+                    value={fmt(grommetAddonPrice(config.type, config.size, config.colour) * quantity(config.capQuantity))} muted />
                 )}
               </div>
             ))}
