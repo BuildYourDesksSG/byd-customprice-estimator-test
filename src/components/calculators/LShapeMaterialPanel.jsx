@@ -198,9 +198,11 @@ export default function LShapeMaterialPanel({ materialKey }) {
           />
         </div>
         {l2 > 120 && (
-          <div role='alert' style={{ color: '#C62828', fontSize: 13, fontWeight: 700, lineHeight: 1.5, marginBottom: 12 }}>
-            Limited color selections ONLY. Speak to our team.
-          </div>
+          <InfoNotice>
+            <span role='alert' style={{ color: '#C62828', fontWeight: 700 }}>
+              Limited color selections ONLY. Speak to our team.
+            </span>
+          </InfoNotice>
         )}
         {l2 <= 120 && <InfoNotice>
           Maximum dimensions: {spec.l1max}cm (main side length) × {LSHAPE_WIDTH_MAX}cm (width). Need something larger?{' '}
