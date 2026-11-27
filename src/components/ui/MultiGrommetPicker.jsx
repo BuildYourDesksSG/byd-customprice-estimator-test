@@ -56,7 +56,7 @@ export default function MultiGrommetPicker({ grommets, setGrommets }) {
     <div style={{ display: 'grid', gap: 12 }}>
       <div style={headingStyle}>Add circle grommet</div>
       <CheckOption
-        label='Add a grommet cap (Circle · 6cm)'
+        label='6cm circle cover'
         price={grommetAddonPrice('Circle', '6cm', grommets.Circle.colour)}
         checked={quantity(grommets.Circle.capQuantity) > 0}
         onChange={checked => setCoverQuantity('Circle', checked ? 1 : 0)}
