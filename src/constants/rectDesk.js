@@ -114,12 +114,12 @@ export const WOOD_EDGE_STYLES = [
   { id: 'style-06', label: 'Style 06', image: 'images/edges/style-06.png' },
 ]
 
-// Grommet — Rectangular (#10: flat $19.90, except 20cm black at $9.90)
+// Grommet — Rectangular (#10: flat $19.90 for all sizes)
 export const GROMMET_RECT_SIZES = ['9cm', '13cm', '20cm', '30cm']
 export const GROMMET_RECT_POSITIONS = ['Left', 'Centre', 'Right']
 export const GROMMET_RECT_COLOURS = ['Black', 'Other']
 export const GROMMET_RECT_BASE_PRICE = 19.9
-export const GROMMET_RECT_20CM_PRICE = 9.9
+export const GROMMET_RECT_20CM_PRICE = 19.9
 
 export function grommetRectPrice(size, colour) {
   return size === '20cm' && colour === 'Black' ? GROMMET_RECT_20CM_PRICE : GROMMET_RECT_BASE_PRICE

@@ -197,13 +197,17 @@ export default function LShapeMaterialPanel({ materialKey }) {
             max={LSHAPE_WIDTH_MAX}
           />
         </div>
-        {l2 > 120 && (
+        {materialKey !== 'solid' && l2 > 120 && (
           <InfoNotice>
             <div role='alert' style={{ color: '#C62828', fontWeight: 700 }}>
               Limited color selections ONLY. Speak to our team.
-              {materialKey === 'solid' && l2 > 140 && (
-                <div style={{ marginTop: 6 }}>L2 exceeding 140 cm will consist of jointed wood.</div>
-              )}
+            </div>
+          </InfoNotice>
+        )}
+        {materialKey === 'solid' && l2 > 140 && (
+          <InfoNotice>
+            <div role='alert' style={{ color: '#C62828', fontWeight: 700 }}>
+              L2 exceeding 140 cm will consist of jointed wood.
             </div>
           </InfoNotice>
         )}
@@ -307,7 +311,7 @@ export default function LShapeMaterialPanel({ materialKey }) {
 
       {/* Grommet Hole Cut-out */}
       <Card>
-        <SectionLabel>Grommet Hole Cut-out</SectionLabel>
+        <SectionLabel>Grommet Add-ons</SectionLabel>
         <MultiGrommetPicker grommets={grommets} setGrommets={setGrommets} />
       </Card>
 

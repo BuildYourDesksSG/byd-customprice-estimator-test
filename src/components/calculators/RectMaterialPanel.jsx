@@ -457,7 +457,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf', length: supplie
           </Card>
 
           <Card>
-            <SectionLabel>Grommet Hole Cut-out</SectionLabel>
+            <SectionLabel>Grommet Add-ons</SectionLabel>
             <MultiGrommetPicker grommets={grommets} setGrommets={setGrommets} />
           </Card>
 

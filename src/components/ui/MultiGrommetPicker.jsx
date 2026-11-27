@@ -5,9 +5,8 @@ import { quantity } from '../../utils/quantity'
 import CheckOption from './CheckOption'
 import PillSelect from './PillSelect'
 
-// Compact add-on list follows Yang's sketch: one round cap plus four selectable
-// rectangular cover sizes. The free hole-only controls remain available below.
-// Both desk calculators share this component and its original pricing model.
+// Compact add-on list follows Yang's sketch. Keep the free hole-only controls
+// below, but place Position and Cover on separate rows for cleaner layout.
 export default function MultiGrommetPicker({ grommets, setGrommets }) {
   const [showHoleOnly, setShowHoleOnly] = useState(false)
   const update = (key, changes) => setGrommets(prev => ({
@@ -33,22 +32,29 @@ export default function MultiGrommetPicker({ grommets, setGrommets }) {
     } }
   })
 
+  const controlRowStyle = { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }
+  const controlLabelStyle = { fontSize: 11.5, color: T.textMute, minWidth: 72 }
+
   const configuration = key => quantity(grommets[key].quantity) > 0 && (
-    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, padding: '8px 6px 0' }}>
-      <span style={{ fontSize: 11.5, color: T.textMute }}>Position</span>
-      <PillSelect options={['Left', 'Centre', 'Right']} value={grommets[key].position}
-        onChange={position => update(key, { position })} />
-      {quantity(grommets[key].capQuantity) > 0 && <>
-        <span style={{ fontSize: 11.5, color: T.textMute }}>Cover colour</span>
-        <PillSelect options={['Black', 'Other']} value={grommets[key].colour}
-          onChange={colour => update(key, { colour })} />
-      </>}
+    <div style={{ display: 'grid', gap: 8, padding: '8px 6px 0' }}>
+      <div style={controlRowStyle}>
+        <span style={controlLabelStyle}>Position</span>
+        <PillSelect options={['Left', 'Centre', 'Right']} value={grommets[key].position}
+          onChange={position => update(key, { position })} />
+      </div>
+      {quantity(grommets[key].capQuantity) > 0 && (
+        <div style={controlRowStyle}>
+          <span style={controlLabelStyle}>Cover</span>
+          <PillSelect options={['Black', 'Other']} value={grommets[key].colour}
+            onChange={colour => update(key, { colour })} />
+        </div>
+      )}
     </div>
   )
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      <div style={headingStyle}>Grommet add-ons</div>
+      <div style={headingStyle}>Add circle grommet</div>
       <CheckOption
         label='Add a grommet cap (Circle · 6cm)'
         price={grommetAddonPrice('Circle', '6cm', grommets.Circle.colour)}
@@ -59,7 +65,7 @@ export default function MultiGrommetPicker({ grommets, setGrommets }) {
       />
       {quantity(grommets.Circle.capQuantity) > 0 && configuration('Circle')}
 
-      <div style={{ ...headingStyle, marginTop: 5 }}>Add rectangular grommet covers</div>
+      <div style={{ ...headingStyle, marginTop: 5 }}>Add rectangular grommet</div>
       {GROMMET_RECT_SIZES.map(size => {
         const g = grommets[size]
         return (
