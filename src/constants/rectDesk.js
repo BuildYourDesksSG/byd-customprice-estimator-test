@@ -19,6 +19,7 @@ export const RECT_FRAMES = {
 
 // Frame colour — no price impact (#20)
 export const RECT_MAX_LEN = 260
+export const RECT_MDF_MAX_LEN = 240
 export const RECT_CUSTOM_THRESHOLD = 180
 export const RECT_CUSTOM_FRAME = { name: 'Build Your Desks™ Custom Frame', description: 'Custom Frame', price: 649, maxLen: 260 }
 

@@ -23,7 +23,7 @@ export default function LShapeCalculator() {
                 padding: '14px 10px',
                 borderRadius: 12,
                 border: `1.5px solid ${active ? '#C8551F' : T.border}`,
-                background: active ? T.brandTint : T.bg,
+                background: active ? T.brandTint : '#FFFFFF',
                 transition: 'all 0.15s',
                 boxShadow: active ? `0 0 0 1px ${T.brand}25` : 'none',
               }}

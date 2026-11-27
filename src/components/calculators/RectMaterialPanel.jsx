@@ -6,6 +6,7 @@ import {
   RECT_FRAMES,
   RECT_MIN_LEN,
   RECT_MAX_LEN,
+  RECT_MDF_MAX_LEN,
   RECT_CUSTOM_THRESHOLD,
   RECT_CUSTOM_FRAME,
   RECT_DEPTH_MIN,
@@ -123,13 +124,16 @@ function EdgeThumb({ id, active, image, label }) {
   )
 }
 
-export default function RectMaterialPanel({ materialKey = 'mdf' }) {
+export default function RectMaterialPanel({ materialKey = 'mdf', length: suppliedLength, setLength: suppliedSetLength }) {
   // Solid Wood prices per species; MDF uses the flat TOP_RATE.
   const isSpecies = materialKey === 'solid'
   const colours = isSpecies ? SOLID_WOOD_SPECIES : MDF_COLOURS
   const edges = isSpecies ? WOOD_EDGE_STYLES : MDF_EDGES
 
-  const [length, setLength] = useState(140)
+  const [internalLength, setInternalLength] = useState(140)
+  const length = suppliedLength ?? internalLength
+  const setLength = suppliedSetLength ?? setInternalLength
+  const maxLength = materialKey === 'mdf' ? RECT_MDF_MAX_LEN : RECT_MAX_LEN
   const [depth, setDepth] = useState(70)
   const [motor, setMotor] = useState('dual')
   const [frameColour, setFrameColour] = useState(FRAME_COLOURS[0])
@@ -156,7 +160,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
   })
 
   const tooShort = length < RECT_MIN_LEN
-  const tooLong = length > RECT_MAX_LEN
+  const tooLong = length > maxLength
   const forceCustomFrame = length > RECT_CUSTOM_THRESHOLD || depth < 60
   const effectiveMotor = forceCustomFrame ? 'custom' : motor
   const previouslyForced = useRef(false)
@@ -302,7 +306,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
             value={length}
             set={setLength}
             min={RECT_MIN_LEN}
-            max={RECT_MAX_LEN}
+            max={maxLength}
           />
           <RangeSlider
             label='Depth'
@@ -324,7 +328,7 @@ export default function RectMaterialPanel({ materialKey = 'mdf' }) {
             <a href={CONTACT_URL} style={{ color: T.warn, fontWeight: 600 }}>
               Contact us
             </a>{' '}
-            for a custom quote above {RECT_MAX_LEN}cm.
+            for a custom quote above {maxLength}cm.
           </StopNotice>
         )}
         {!depthOk && !tooShort && !tooLong && (

@@ -199,9 +199,12 @@ export default function LShapeMaterialPanel({ materialKey }) {
         </div>
         {l2 > 120 && (
           <InfoNotice>
-            <span role='alert' style={{ color: '#C62828', fontWeight: 700 }}>
+            <div role='alert' style={{ color: '#C62828', fontWeight: 700 }}>
               Limited color selections ONLY. Speak to our team.
-            </span>
+              {materialKey === 'solid' && l2 > 140 && (
+                <div style={{ marginTop: 6 }}>L2 exceeding 140 cm will consist of jointed wood.</div>
+              )}
+            </div>
           </InfoNotice>
         )}
         {l2 <= 120 && <InfoNotice>

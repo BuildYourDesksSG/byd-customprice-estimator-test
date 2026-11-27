@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { T } from '../../constants/tokens'
-import { RECT_MATERIALS } from '../../constants/rectDesk'
+import { RECT_MATERIALS, RECT_MDF_MAX_LEN } from '../../constants/rectDesk'
 import RectMaterialPanel from './RectMaterialPanel'
 
 export default function RectCalculator() {
   const [material, setMaterial] = useState('mdf')
+  const [length, setLength] = useState(140)
+  const selectMaterial = (nextMaterial) => {
+    setMaterial(nextMaterial)
+    if (nextMaterial === 'mdf') setLength(prev => Math.min(prev, RECT_MDF_MAX_LEN))
+  }
   const keys = Object.keys(RECT_MATERIALS)
 
   return (
@@ -16,7 +21,7 @@ export default function RectCalculator() {
           return (
             <div
               key={k}
-              onClick={() => setMaterial(k)}
+              onClick={() => selectMaterial(k)}
               style={{
                 cursor: 'pointer',
                 textAlign: 'center',
@@ -37,7 +42,7 @@ export default function RectCalculator() {
         })}
       </div>
       {/* key={material} resets all panel state when the material switches */}
-      <RectMaterialPanel key={material} materialKey={material} />
+      <RectMaterialPanel key={material} materialKey={material} length={length} setLength={setLength} />
     </div>
   )
 }
